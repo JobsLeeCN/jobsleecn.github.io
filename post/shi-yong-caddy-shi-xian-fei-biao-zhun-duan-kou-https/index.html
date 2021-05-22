@@ -165,7 +165,7 @@
                     <article class="post-wrap">
                         <header class="post-header">
                             <h1 class="post-title">
-                                Hello Gridea，给优秀的Gridea工具
+                                使用caddy实现非标准端口https
                             </h1>
                             
                                     <!--zh-->
@@ -174,15 +174,17 @@
                                         <a itemprop="author" rel="author" href="/">
                                             Jobs.Lee's Blog
                                         </a>
-                                        <span class="post-time">&#x65E5;&#x671F;: <a href="#">2018-12-12</a></span>
+                                        <span class="post-time">&#x65E5;&#x671F;: <a href="#">2021-05-22</a></span>
                                         <span class="post-readtime">&#x9605;&#x8BFB;&#x65F6;&#x95F4;:<a
-                                    href="#">1.1
+                                    href="#">2.7
                                     &#x5206;&#x949F;</a></span>
-                                        <span class="post-words">&#x5B57;&#x6570;:<a href="#">325</a></span>
+                                        <span class="post-words">&#x5B57;&#x6570;:<a href="#">746</a></span>
                                         
                                             <span class="post-category">&#x5206;&#x7C7B;:
                                 
-                                <a href="https://jobsleecn.github.io/tag/PFg8dsLds/">Gridea</a>
+                                <a href="https://jobsleecn.github.io/tag/GeLeufOVy/">服务器</a>
+                                
+                                <a href="https://jobsleecn.github.io/tag/u3rn4NSpgj/">Https</a>
                                 
                             </span>
                                             
@@ -193,31 +195,59 @@
                                     
                         </header>
                         
-                            <img class="post-feature-image" src="https://jobsleecn.github.io/post-images/hello-gridea.png" alt="">
-                          
                         <div class="post-content">
-                            <p>优秀便捷的Gridea，好几年了，还是用回了它！初始化的文章就留给它了。</p>
-<p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
-✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
-<!-- more -->
-<p><a href="https://github.com/getgridea/gridea">Github</a><br>
-<a href="https://gridea.dev/">Gridea 主页</a><br>
-<a href="http://fehey.com/">示例网站</a></p>
-<h2 id="特性">特性👇</h2>
-<p>📝  你可以使用最酷的 <strong>Markdown</strong> 语法，进行快速创作</p>
-<p>🌉  你可以给文章配上精美的封面图和在文章任意位置插入图片</p>
-<p>🏷️  你可以对文章进行标签分组</p>
-<p>📋  你可以自定义菜单，甚至可以创建外部链接菜单</p>
-<p>💻  你可以在 <strong>Windows</strong>，<strong>MacOS</strong> 或 <strong>Linux</strong> 设备上使用此客户端</p>
-<p>🌎  你可以使用 <strong>𝖦𝗂𝗍𝗁𝗎𝖻 𝖯𝖺𝗀𝖾𝗌</strong> 或 <strong>Coding Pages</strong> 向世界展示，未来将支持更多平台</p>
-<p>💬  你可以进行简单的配置，接入 <a href="https://github.com/gitalk/gitalk">Gitalk</a> 或 <a href="https://github.com/SukkaW/DisqusJS">DisqusJS</a> 评论系统</p>
-<p>🇬🇧  你可以使用<strong>中文简体</strong>或<strong>英语</strong></p>
-<p>🌁  你可以任意使用应用内默认主题或任意第三方主题，强大的主题自定义能力</p>
-<p>🖥  你可以自定义源文件夹，利用 OneDrive、百度网盘、iCloud、Dropbox 等进行多设备同步</p>
-<p>🌱 当然 <strong>Gridea</strong> 还很年轻，有很多不足，但请相信，它会不停向前 🏃</p>
-<p>未来，它一定会成为你离不开的伙伴</p>
-<p>尽情发挥你的才华吧！</p>
-<p>😘 Enjoy~</p>
+                            <p>近来使用<a href="https://github.com/halo-dev/halo">Halo</a>搭建博客，并顺便把<a href="https://github.com/aquanlerou/WeHalo">WeHalo</a>小程序也把玩了起来，但是发现几个非常棘手的问题：</p>
+<ol>
+<li>根据访问日志发现有三方在刷取关键接口的请求，http请求在部分情况下会暴露出很显著的安全问题；</li>
+<li>小程序强制依赖https，非https连接不能使用，尝试三方开源的<a href="https://github.com/guren-cloud/v-request">v-request</a>替换也是效果不太好；</li>
+<li>第三个问题是由以上问题衍生的，如果升级https网站域名首先就是需要备案，对于个人博客来说，稳定性要求没有那么高，备案流程复杂，想想还是算了吧；</li>
+</ol>
+<p>那能怎么办呢？条件不够，技术来凑。</p>
+<p>众所周知，http和https请求的默认端口分别为80和443，那么能否实现非标准端口的https呢，这样就能绕过未备案的限制。</p>
+<p>经过对https资料的查找，发现有很大希望实现，有这么关键的几点。</p>
+<p>https基本原理就不在熬述了，直接引用资料原文：</p>
+<blockquote>
+<p>通过 ACME 协议向 Let's Encrypt 证明自己的域名所有权的过程就叫做 Challenge （验证），目前有三种 Challenge 的方式：</p>
+<ul>
+<li>HTTP-01</li>
+<li>NS-01</li>
+<li>TLS-SNI-01 （已禁用）</li>
+<li>TLS-ALPN-01</li>
+</ul>
+<p>HTTP-01是目前最常见的验证方式，但是该验证方式需要通过80端口开放一个路径给Let's Encrypt访问它提供的 token来验证你的域名所有权，因此在80端口被封锁的情况下这个验证方式是不现实的；</p>
+<p>类似的，TLS-ALPN-01需要通过443端口访问来验证，也是行不通；</p>
+<p>这样对于国内家庭带宽用户来说就只剩下了一种方式：DNS-01。</p>
+<p>了解这些后，解决方案就一目了然了，就是用DNS-01方式进行https验证。</p>
+</blockquote>
+<p>有了这些信息，想法可行，接下来就是寻找合适的工具来实现了。</p>
+<p>caddy给我们进行了很好的集成，基于golang的caddy就是一个编译过后的二进制文件，轻巧、实用。</p>
+<p>caddy原生https的实现是基于Let's Encrypt的，想要使用DNS-01的https实现需要附带插件，这里我们阿里云的dns服务商，需要选择 github.com/caddy-dns/lego-deprecated；</p>
+<p>下载完成后的caddy文件就是包含附件的可执行文件了；</p>
+<p>接下来我们编写Caddyfile配置文件，有两个配置要点：</p>
+<ol>
+<li>指定http和https监听端口；</li>
+<li>配置请求指向；</li>
+</ol>
+<pre><code>{
+  http_port 1234
+  https_port 2234
+}
+xxx {
+  reverse_proxy localhost:8081
+  tls {
+    dns lego_deprecated alidns
+  }
+}
+</code></pre>
+<p>配置完成还不行，我们需要按照<a href="https://go-acme.github.io/lego/dns/alidns/">lego_deprecated的文档</a>，建立文件，配置以下：</p>
+<pre><code>ALICLOUD_ACCESS_KEY=xxx
+ALICLOUD_SECRET_KEY=xxx
+</code></pre>
+<p>关键参数（此部分参数需要从阿里云后台进行获取），便于联系对应dns进行相关的操作；</p>
+<p>最后使用caddy指令带上配置好的文件直接启动</p>
+<pre><code>caddy run --config Caddyfile --envfile alidns.env
+</code></pre>
+<p>大功告成！</p>
 
                         </div>
                         
@@ -232,7 +262,7 @@
 
                                                 <p class="copyright-item">
                                                     <span>&#x6C38;&#x4E45;&#x94FE;&#x63A5;:</span>
-                                                    <span><a href="https://jobsleecn.github.io/post/hello-gridea/">https://jobsleecn.github.io/post/hello-gridea/</a></span>
+                                                    <span><a href="https://jobsleecn.github.io/post/shi-yong-caddy-shi-xian-fei-biao-zhun-duan-kou-https/">https://jobsleecn.github.io/post/shi-yong-caddy-shi-xian-fei-biao-zhun-duan-kou-https/</a></span>
                                                 </p>
 
                                                 <p class="copyright-item">
@@ -247,15 +277,9 @@
                                                                     <span style="margin-right:15px">
                         <i class="post-share"></i>
                         <span>&#x5206;&#x4EAB;:</span>
-                                                                    <a title="QR 码" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://jobsleecn.github.io/post/hello-gridea/"><i class="fa fa-qrcode"></i></a>
-                                                                    <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://jobsleecn.github.io/post/hello-gridea/&sharesource=qzone&title=Hello Gridea，给优秀的Gridea工具&pics=https://jobsleecn.github.io/images/avatar.png?v=1621681888809&summary=&lt;p&gt;优秀便捷的Gridea，好几年了，还是用回了它！初始化的文章就留给它了。&lt;/p&gt;
-&lt;p&gt;👏  欢迎使用 &lt;strong&gt;Gridea&lt;/strong&gt; ！&lt;br&gt;
-✍️  &lt;strong&gt;Gridea&lt;/strong&gt; 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...&lt;/p&gt;
-"><i class="fa fa-qq"></i></a>
-                                                                    <a title="新浪微博" target="_blank" href="https://service.weibo.com/share/share.php?url=https://jobsleecn.github.io/post/hello-gridea/&sharesource=weibo&title=Hello Gridea，给优秀的Gridea工具 + " - " + &lt;p&gt;优秀便捷的Gridea，好几年了，还是用回了它！初始化的文章就留给它了。&lt;/p&gt;
-&lt;p&gt;👏  欢迎使用 &lt;strong&gt;Gridea&lt;/strong&gt; ！&lt;br&gt;
-✍️  &lt;strong&gt;Gridea&lt;/strong&gt; 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...&lt;/p&gt;
-&pic="https://jobsleecn.github.io/images/avatar.png?v=1621681888809 "><i class="fa fa-weibo "></i></a>
+                                                                    <a title="QR 码" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://jobsleecn.github.io/post/shi-yong-caddy-shi-xian-fei-biao-zhun-duan-kou-https/"><i class="fa fa-qrcode"></i></a>
+                                                                    <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://jobsleecn.github.io/post/shi-yong-caddy-shi-xian-fei-biao-zhun-duan-kou-https/&sharesource=qzone&title=使用caddy实现非标准端口https&pics=https://jobsleecn.github.io/images/avatar.png?v=1621681888809&summary="><i class="fa fa-qq"></i></a>
+                                                                    <a title="新浪微博" target="_blank" href="https://service.weibo.com/share/share.php?url=https://jobsleecn.github.io/post/shi-yong-caddy-shi-xian-fei-biao-zhun-duan-kou-https/&sharesource=weibo&title=使用caddy实现非标准端口https + " - " + &pic="https://jobsleecn.github.io/images/avatar.png?v=1621681888809 "><i class="fa fa-weibo "></i></a>
 
                                                                     </span>
                                                                     
@@ -266,8 +290,12 @@
                                                                                     <span class="tag ">
                         
                         
-                        <a href="https://jobsleecn.github.io/tag/PFg8dsLds/">#
-                    Gridea
+                        <a href="https://jobsleecn.github.io/tag/GeLeufOVy/">#
+                    服务器
+                        </a>
+                        
+                        <a href="https://jobsleecn.github.io/tag/u3rn4NSpgj/">#
+                    Https
                         </a>
                         
                             
@@ -285,11 +313,15 @@
                                                                                 <!---->
                                                                                 <section class="post-nav">
                                                                                     
-                                                                                        <a class="prev" rel="prev" href="https://jobsleecn.github.io/post/shi-yong-caddy-shi-xian-fei-biao-zhun-duan-kou-https/">
-                                                                                            使用caddy实现非标准端口https
+                                                                                        <a class="prev" rel="prev" href="https://jobsleecn.github.io/post/centos-7-mini-ban-ben-an-zhuang-hou-de-chang-yong-cao-zuo/">
+                                                                                            CentOS 7 mini版本安装后的常用操作
                                                                                         </a>
                                                                                         
                                                                                             
+                                                                                                <a class="next" rel="next" href="https://jobsleecn.github.io/post/hello-gridea/">
+                                                                                                    Hello Gridea，给优秀的Gridea工具
+                                                                                                </a>
+                                                                                                
                                                                                 </section>
                     </article>
                 </div>

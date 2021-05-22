@@ -162,41 +162,201 @@
 
             <div class="main">
                 <div class="container">
-                    <div class="post-wrap tags">
+                    <article class="post-wrap">
+                        <header class="post-header">
+                            <h1 class="post-title">
+                                CentOS 7 mini版本安装后的常用操作
+                            </h1>
+                            
+                                    <!--zh-->
+                                    <div class="post-meta zh">
+                                        &#x4F5C;&#x8005;:
+                                        <a itemprop="author" rel="author" href="/">
+                                            Jobs.Lee's Blog
+                                        </a>
+                                        <span class="post-time">&#x65E5;&#x671F;: <a href="#">2021-05-22</a></span>
+                                        <span class="post-readtime">&#x9605;&#x8BFB;&#x65F6;&#x95F4;:<a
+                                    href="#">1.8
+                                    &#x5206;&#x949F;</a></span>
+                                        <span class="post-words">&#x5B57;&#x6570;:<a href="#">399</a></span>
+                                        
+                                            <span class="post-category">&#x5206;&#x7C7B;:
+                                
+                                <a href="https://jobsleecn.github.io/tag/q2Q_stSTs/">Linux</a>
+                                
+                            </span>
+                                            
+                                                阅读量:
+                                                <span data-hk-page="current"> - </span>
+                                                
+                                    </div>
+                                    
+                        </header>
                         
-                            <a href="https://jobsleecn.github.io/tag/nkfOh3Zd_/">
-                                <p class="post-title">
-                                    <i class="fa fa-tags" aria-hidden="true"> Java</i>
-                                </p>
-                            </a>
+                        <div class="post-content">
+                            <ol>
+<li>网络配置</li>
+</ol>
+<pre><code class="language-bash">vi /etc/sysconfig/network-scripts/ifcfg-eth?
+</code></pre>
+<p>?处一般情况下是0，我的是33，这个名称可以后期修改，修改时注意使用ls查看目录文件<br>
+把文件内容</p>
+<pre><code class="language-bash">ONBOOT=no
+</code></pre>
+<p>改为</p>
+<pre><code class="language-bash">ONBOOT=yes
+</code></pre>
+<p>然后重启网络服务</p>
+<pre><code class="language-bash">service network restart
+</code></pre>
+<p>如果是静态IP，则需要在配置文件中加入</p>
+<pre><code class="language-bash">IPADDR=...(静态IP) 
+GETAWAY=...(网关) 
+NETMASK=...(子网掩码)
+</code></pre>
+<ol start="2">
+<li>repo源配置</li>
+</ol>
+<p>切换阿里源</p>
+<pre><code class="language-bash">mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup
+wget -O /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-7.repo
+yum clean all
+yum makecache
+</code></pre>
+<ol start="3">
+<li>基本组件更新</li>
+</ol>
+<pre><code class="language-bash">yum update
+</code></pre>
+<ol start="4">
+<li>UTC时间本地化</li>
+</ol>
+<pre><code class="language-bash">yum install ntpdate
+vi /etc/sysconfig/clock
+</code></pre>
+<p>将下面文本中的UTC选项设置为false</p>
+<pre><code class="language-bash">ZONE=”Asia/Shanghai” 
+UTC=false 
+ARC=false
+</code></pre>
+<p>将linux的时区设置为上海时区</p>
+<pre><code class="language-bash">ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+</code></pre>
+<p>设置硬件时间和系统时间一致并校准</p>
+<pre><code class="language-bash">ntpdate cn.pool.ntp.org
+/sbin/hwclock --systohc
+</code></pre>
+<ol start="5">
+<li>常用开发软件</li>
+</ol>
+<pre><code class="language-bash">yum install vim gcc make git net-tools kernel-headers kernel-devel
+</code></pre>
+<p>其中net-tools提供ifconfig工具，以及kernel-headers和kernel-devel是为了后面安装VMware Tools做必要的准备<br>
+6. VMware Tools（虚拟机）</p>
+<pre><code class="language-bash">mkdir /mnt/cdrom
+mount /dev/cdrom /mnt/cdrom
+cd /mnt/cdrom
+tar xzvf VMwareTools-*.tar.gz
+cd vmware-tools-distrib
+./vmware-install.pl
+</code></pre>
+<p>其中*号为VMware Tools的版本号<br>
+7. 图形界面</p>
+<pre><code class="language-bash">yum groupinstall &quot;X Window System&quot;
+yum groupinstall &quot;GNOME Desktop&quot;
+</code></pre>
+<p>这里选择的是GNOME桌面环境<br>
+查看我们可以安装的桌面环境</p>
+<pre><code class="language-bash">yum grouplist
+</code></pre>
+<p>设置系统默认启动环境</p>
+<pre><code class="language-bash">systemctl set-default multi-user.target  //设置成命令模式
+systemctl set-default graphical.target  //设置成图形模式
+</code></pre>
+<p>重启</p>
+<pre><code class="language-bash">reboot
+</code></pre>
+<ol start="8">
+<li>Enjoy!</li>
+</ol>
+
+                        </div>
+                        
+                                
+                                    
+                                            <!--zh-->
+                                            <section class="post-copyright zh">
+                                                <p class="copyright-item ">
+                                                    <span>&#x4F5C;&#x8005;:</span>
+                                                    <span>Jobs.Lee's Blog</span>
+                                                </p>
+
+                                                <p class="copyright-item">
+                                                    <span>&#x6C38;&#x4E45;&#x94FE;&#x63A5;:</span>
+                                                    <span><a href="https://jobsleecn.github.io/post/centos-7-mini-ban-ben-an-zhuang-hou-de-chang-yong-cao-zuo/">https://jobsleecn.github.io/post/centos-7-mini-ban-ben-an-zhuang-hou-de-chang-yong-cao-zuo/</a></span>
+                                                </p>
+
+                                                <p class="copyright-item">
+                                                    <span>&#x534F;&#x8BAE;:</span>
+                                                    <span>MIT License</span>
+                                                </p>
+                                            </section>
+                                            
+                                                
+                                                    
+                                                                    <!--Share-->
+                                                                    <span style="margin-right:15px">
+                        <i class="post-share"></i>
+                        <span>&#x5206;&#x4EAB;:</span>
+                                                                    <a title="QR 码" target="_blank" href="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://jobsleecn.github.io/post/centos-7-mini-ban-ben-an-zhuang-hou-de-chang-yong-cao-zuo/"><i class="fa fa-qrcode"></i></a>
+                                                                    <a title="QQ" target="_blank" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://jobsleecn.github.io/post/centos-7-mini-ban-ben-an-zhuang-hou-de-chang-yong-cao-zuo/&sharesource=qzone&title=CentOS 7 mini版本安装后的常用操作&pics=https://jobsleecn.github.io/images/avatar.png?v=1621681888809&summary="><i class="fa fa-qq"></i></a>
+                                                                    <a title="新浪微博" target="_blank" href="https://service.weibo.com/share/share.php?url=https://jobsleecn.github.io/post/centos-7-mini-ban-ben-an-zhuang-hou-de-chang-yong-cao-zuo/&sharesource=weibo&title=CentOS 7 mini版本安装后的常用操作 + " - " + &pic="https://jobsleecn.github.io/images/avatar.png?v=1621681888809 "><i class="fa fa-weibo "></i></a>
+
+                                                                    </span>
+                                                                    
+                                                                            <!--zh-->
+                                                                            <section class="post-tags zh ">
+                                                                                <div>
+                                                                                    <span>&#x6807;&#x7B7E;:</span>
+                                                                                    <span class="tag ">
+                        
+                        
+                        <a href="https://jobsleecn.github.io/tag/q2Q_stSTs/">#
+                    Linux
+                        </a>
+                        
                             
-                            <a href="https://jobsleecn.github.io/tag/q2Q_stSTs/">
-                                <p class="post-title">
-                                    <i class="fa fa-tags" aria-hidden="true"> Linux</i>
-                                </p>
-                            </a>
-                            
-                            <a href="https://jobsleecn.github.io/tag/GeLeufOVy/">
-                                <p class="post-title">
-                                    <i class="fa fa-tags" aria-hidden="true"> 服务器</i>
-                                </p>
-                            </a>
-                            
-                            <a href="https://jobsleecn.github.io/tag/u3rn4NSpgj/">
-                                <p class="post-title">
-                                    <i class="fa fa-tags" aria-hidden="true"> Https</i>
-                                </p>
-                            </a>
-                            
-                            <a href="https://jobsleecn.github.io/tag/PFg8dsLds/">
-                                <p class="post-title">
-                                    <i class="fa fa-tags" aria-hidden="true"> Gridea</i>
-                                </p>
-                            </a>
-                            
-                    </div>
+                                </span>
+                                                                                </div>
+                                                                                <div>
+                                                                                    <a href="javascript:window.history.back();">
+                        &#x8FD4;&#x56DE;</a>
+                                                                                    <span>&dot;</span>
+                                                                                    <a href="#">&#x4E3B;&#x9875;</a>
+                                                                                </div>
+                                                                            </section>
+
+                                                                            
+                                                                                <!---->
+                                                                                <section class="post-nav">
+                                                                                    
+                                                                                        <a class="prev" rel="prev" href="https://jobsleecn.github.io/post/yi-ci-shu-du-sheng-cheng-ji-qiu-jie-fang-an-de-pou-xi-java-shi-xian/">
+                                                                                            一次数独生成及求解方案的剖析（Java实现）
+                                                                                        </a>
+                                                                                        
+                                                                                            
+                                                                                                <a class="next" rel="next" href="https://jobsleecn.github.io/post/shi-yong-caddy-shi-xian-fei-biao-zhun-duan-kou-https/">
+                                                                                                    使用caddy实现非标准端口https
+                                                                                                </a>
+                                                                                                
+                                                                                </section>
+                    </article>
                 </div>
+                
+                                            
             </div>
+    </div>
+    </div>
     </div>
     
         <footer id="footer" class="footer">
@@ -259,5 +419,8 @@
                 </script>
         </div>
 </body>
+<script>
+    scroll();
+</script>
 
 </html>

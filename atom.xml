@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://jobsleecn.github.io</id>
     <title>Jobs.Lee&apos;s Blog</title>
-    <updated>2021-05-21T16:56:12.079Z</updated>
+    <updated>2021-05-22T11:12:00.971Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://jobsleecn.github.io"/>
     <link rel="self" href="https://jobsleecn.github.io/atom.xml"/>
@@ -10,6 +10,539 @@
     <logo>https://jobsleecn.github.io/images/avatar.png</logo>
     <icon>https://jobsleecn.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, Jobs.Lee&apos;s Blog</rights>
+    <entry>
+        <title type="html"><![CDATA[一次数独生成及求解方案的剖析（Java实现）]]></title>
+        <id>https://jobsleecn.github.io/post/yi-ci-shu-du-sheng-cheng-ji-qiu-jie-fang-an-de-pou-xi-java-shi-xian/</id>
+        <link href="https://jobsleecn.github.io/post/yi-ci-shu-du-sheng-cheng-ji-qiu-jie-fang-an-de-pou-xi-java-shi-xian/">
+        </link>
+        <updated>2021-05-22T11:07:38.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="数独生成及求解方案剖析java实现">数独生成及求解方案剖析（Java实现）</h1>
+<h2 id="关键词"><strong>关键词</strong></h2>
+<ul>
+<li>数独9x9</li>
+<li>数独生成</li>
+<li>数独解题</li>
+</ul>
+<hr>
+<h2 id="序言"><strong>序言</strong></h2>
+<p>最近业务在巩固Java基础，编写了一个基于JavaFX的数独小游戏（<a href="https://github.com/JobsLeeCN/ClassicGames/tree/main/Sudoku">链接点我</a>）。写到核心部分发现平时玩的数独这个东西，还真有点意思：</p>
+<p><strong>行、列、子宫格</strong>之间的数字互相影响，牵一发而动全身，一不留神就碰撞冲突了,简直都能搞出玄学的意味，怪不得古人能由此“<a href="https://baike.baidu.com/item/%E4%B9%9D%E5%AE%AB%E6%A0%BC/2216215">九宫格</a>”演绎出八卦和《周易》。</p>
+<p>于是自己想了不少算法，也查找了不少资料，但是都没有找到理想的Java实现；最后无意间在Github发现一个国外大佬写了这样一个算法，体味一番，顿觉精辟！</p>
+<p>本篇就是把国外大佬的这个算法拿过来，进行一个深入的解析，希望能帮助到用得上的人。</p>
+<hr>
+<h2 id="正文"><strong>正文</strong></h2>
+<p>先上地址</p>
+<p>数独算法Github地址：https://github.com/a11n/sudoku</p>
+<p>数独算法Github中文注解地址：https://github.com/JobsLeeCN/sudoku</p>
+<p>代码只有三个类：</p>
+<ul>
+<li>Generator.java</li>
+</ul>
+<blockquote>
+<p>生成器 -&gt; 生成数独格子</p>
+</blockquote>
+<ul>
+<li>Solver.java</li>
+</ul>
+<blockquote>
+<p>解法器 -&gt; 数独求解</p>
+</blockquote>
+<ul>
+<li>Grid.java</li>
+</ul>
+<blockquote>
+<p>网格对象 -&gt; 基础数独格子对象</p>
+</blockquote>
+<p>直接上main方法看下基本调用：</p>
+<pre><code class="language-java">public static void main(String[] args) {
+        // 生成一个20个空格的9x9数独
+        Generator generator = new Generator();
+        Grid grid = generator.generate(20);
+        System.out.println(grid.toString());
+        // 9x9数独求解
+        Solver solver = new Solver();
+        solver.solve(grid);
+        System.out.println(grid.toString());
+    }
+</code></pre>
+<p>看下输出结果（输出方法我自己进行了修改）：</p>
+<p>生成的9x9数独（0为空格）</p>
+<pre><code>[9, 8, 0, 1, 0, 2, 5, 3, 7]
+[1, 4, 2, 5, 0, 7, 9, 8, 6]
+[0, 3, 7, 0, 8, 0, 1, 0, 0]
+[8, 9, 1, 0, 2, 4, 3, 0, 5]
+[6, 2, 0, 0, 0, 5, 8, 0, 0]
+[3, 7, 0, 8, 9, 1, 6, 2, 4]
+[4, 6, 9, 2, 1, 8, 7, 5, 3]
+[2, 1, 8, 0, 0, 0, 4, 6, 9]
+[0, 5, 3, 4, 6, 9, 2, 1, 8]
+</code></pre>
+<p>数独求解</p>
+<pre><code>[9, 8, 6, 1, 4, 2, 5, 3, 7]
+[1, 4, 2, 5, 3, 7, 9, 8, 6]
+[5, 3, 7, 9, 8, 6, 1, 4, 2]
+[8, 9, 1, 6, 2, 4, 3, 7, 5]
+[6, 2, 4, 3, 7, 5, 8, 9, 1]
+[3, 7, 0, 8, 9, 1, 6, 2, 4]
+[4, 6, 9, 2, 1, 8, 7, 5, 3]
+[2, 1, 8, 7, 5, 3, 4, 6, 9]
+[7, 5, 3, 4, 6, 9, 2, 1, 8]
+
+</code></pre>
+<p>使用起来很简单，速度也很快；其核心部分的代码，其实只有三个点。</p>
+<h3 id="1-第一点-解法">1. 第一点 解法</h3>
+<ul>
+<li>随机数组</li>
+<li>递归填数</li>
+</ul>
+<p>在Solver.java中solve方法实现；</p>
+<p>每次遍历的是使用交换方法实现的随机数组，保证了随机数组空间的有限占用，并且能够减少枚举过程中的重复几率。</p>
+<p>代码我已经做了中文注释：</p>
+<pre><code class="language-java">/**
+ * 获取随机数组
+ *
+ * @return
+ */
+private int[] generateRandomValues() {
+    // 初始化随机数组 此处空格子0是因为格子初始化的时候 默认给的就是0 便于判断和处理
+    int[] values = {EMPTY, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    Random random = new Random();
+    // 使用交换法构建随机数组
+    for (int i = 0, j = random.nextInt(9), tmp = values[j];
+         i &lt; values.length;
+         i++, j = random.nextInt(9), tmp = values[j]) {
+        if (i == j) continue;
+        values[j] = values[i];
+        values[i] = tmp;
+    }
+    return values;
+}
+
+/**
+ * 求解方法
+ *
+ * @param grid
+ * @param cell
+ * @return
+ */
+private boolean solve(Grid grid, Optional&lt;Grid.Cell&gt; cell) {
+    // 空格子 说明遍历处理完了
+    if (!cell.isPresent()) {
+        return true;
+    }
+    // 遍历随机数值 尝试填数
+    for (int value : values) {
+        // 校验填的数是否合理 合理的话尝试下一个空格子
+        if (grid.isValidValueForCell(cell.get(), value)) {
+            cell.get().setValue(value);
+            // 递归尝试下一个空格子
+            if (solve(grid, grid.getNextEmptyCellOf(cell.get()))) return true;
+            // 尝试失败格子的填入0 继续为当前格子尝试下一个随机值
+            cell.get().setValue(EMPTY);
+        }
+    }
+    return false;
+}
+</code></pre>
+<h3 id="2-第二点-构建">2. 第二点 构建</h3>
+<ul>
+<li>对象数组</li>
+</ul>
+<p>整个对象的构建在Grid.java中，其中涉及到两个对象Grid和Cell，Grid由Cell[][]数组构成，Cell中记录了格子的数值、行列子宫格维度的格子列表及下一个格子对象：</p>
+<p>Grid对象</p>
+<pre><code class="language-java">/**
+ * 由数据格子构成的数独格子
+ */
+private final Cell[][] grid;
+</code></pre>
+<p>Cell对象</p>
+<pre><code class="language-java">// 格子数值
+private int value;
+// 行其他格子列表
+private Collection&lt;Cell&gt; rowNeighbors;
+// 列其他格子列表
+private Collection&lt;Cell&gt; columnNeighbors;
+// 子宫格其他格子列表
+private Collection&lt;Cell&gt; boxNeighbors;
+// 下一个格子对象
+private Cell nextCell;
+</code></pre>
+<h3 id="3-第三点-遍历判断">3. 第三点 遍历判断</h3>
+<ul>
+<li>多维度引用</li>
+<li>判断重复</li>
+</ul>
+<p>Grid初始化时，在Cell对象中，使用List构造了行、列、子宫格维度的<strong>引用</strong>（请注意这里的引用，后面会讲到这个引用的妙处），见如下代码及中文注释：</p>
+<pre><code class="language-java">/**
+ * 返回数独格子的工厂方法
+ *
+ * @param grid
+ * @return
+ */
+public static Grid of(int[][] grid) {
+    ...
+
+    // 初始化格子各维度统计List 9x9 行 列 子宫格
+    Cell[][] cells = new Cell[9][9];
+    List&lt;List&lt;Cell&gt;&gt; rows = new ArrayList&lt;&gt;();
+    List&lt;List&lt;Cell&gt;&gt; columns = new ArrayList&lt;&gt;();
+    List&lt;List&lt;Cell&gt;&gt; boxes = new ArrayList&lt;&gt;();
+    // 初始化List 9行 9列 9子宫格
+    for (int i = 0; i &lt; 9; i++) {
+        rows.add(new ArrayList&lt;Cell&gt;());
+        columns.add(new ArrayList&lt;Cell&gt;());
+        boxes.add(new ArrayList&lt;Cell&gt;());
+    }
+
+    Cell lastCell = null;
+    // 逐一遍历数独格子 往各维度统计List中填数
+    for (int row = 0; row &lt; grid.length; row++) {
+        for (int column = 0; column &lt; grid[row].length; column++) {
+            Cell cell = new Cell(grid[row][column]);
+            cells[row][column] = cell;
+
+            rows.get(row).add(cell);
+            columns.get(column).add(cell);
+            // 子宫格在List中的index计算
+            boxes.get((row / 3) * 3 + column / 3).add(cell);
+            // 如果有上一次遍历的格子 则当前格子为上个格子的下一格子
+            if (lastCell != null) {
+                lastCell.setNextCell(cell);
+            }
+            // 记录上一次遍历的格子
+            lastCell = cell;
+        }
+    }
+
+    // 逐行 逐列 逐子宫格 遍历 处理对应模块的关联邻居List
+    for (int i = 0; i &lt; 9; i++) {
+        // 逐行
+        List&lt;Cell&gt; row = rows.get(i);
+        for (Cell cell : row) {
+            List&lt;Cell&gt; rowNeighbors = new ArrayList&lt;&gt;(row);
+            rowNeighbors.remove(cell);
+            cell.setRowNeighbors(rowNeighbors);
+        }
+
+        // 逐列
+        ...
+
+        // 逐子宫格
+        ...
+    }
+
+    ...
+}
+</code></pre>
+<p>构造完成后，每试一次填数，就遍历一次多维度的List判断行、列、3x3子宫格的数字是否重复：</p>
+<pre><code class="language-java">/**
+ * 判断格子填入的数字是否合适
+ *
+ * @param cell
+ * @param value
+ * @return
+ */
+public boolean isValidValueForCell(Cell cell, int value) {
+    return isValidInRow(cell, value) &amp;&amp; isValidInColumn(cell, value) &amp;&amp; isValidInBox(cell, value);
+}
+
+...
+
+/**
+ * 判断数独行数字是否合规
+ *
+ * @param cell
+ * @param value
+ * @return
+ */
+private boolean isValidInRow(Cell cell, int value) {
+    return !getRowValuesOf(cell).contains(value);
+}
+
+...
+
+/**
+ * 获取行格子数值列表
+ *
+ * @param cell
+ * @return
+ */
+private Collection&lt;Integer&gt; getRowValuesOf(Cell cell) {
+    List&lt;Integer&gt; rowValues = new ArrayList&lt;&gt;();
+    for (Cell neighbor : cell.getRowNeighbors()) rowValues.add(neighbor.getValue());
+    return rowValues;
+}
+</code></pre>
+<hr>
+<p>看完代码，其实不难发现，算法不是很复杂，简洁易懂——通过随机和递归进行枚举和试错，外加List.contains()方法遍历判断；逻辑并不复杂，代码也十分精炼；</p>
+<p>于是本人通过使用基本数据int[][]，不使用对象，按照其核心逻辑实现了自己的一套数独，却发现极度耗时（大家可以自己尝试下），很久没有结果输出。</p>
+<p>为什么同样是递归，自己的性能却这么差呢？</p>
+<p>仔细思考，最后发现<strong>面向对象</strong>真的是个好东西，例子中的<strong>对象的引用</strong>从很大一层面上解决了本方法数独递归的性能问题。</p>
+<hr>
+<p>写一个有趣的例子来解释下，用一个对象构建二维数组，初始化数值后，分别按照行维度和列维度关联到对应的List中，打印数组和这些List；</p>
+<p>然后我们修改(0,0)位置的数值，<strong>注意，这里不是new一个新的对象，而是直接使用对象的set方法操作其对应数值</strong>，再打印数组和这些List，代码和结果如下：</p>
+<p>示例代码</p>
+<pre><code class="language-java">public static void main(String[] args) {
+        Entity[][] ee = new Entity[3][3];
+        for (int i = 0; i &lt; 3; i++) {
+            for (int j = 0; j &lt; 3; j++) {
+                Entity e = new Entity();
+                e.setX(i);
+                e.setY(j);
+                ee[i][j] = e;
+            }
+        }
+        System.out.println(Arrays.deepToString(ee));
+
+        List&lt;List&lt;Entity&gt;&gt; row = new ArrayList&lt;&gt;();
+        List&lt;List&lt;Entity&gt;&gt; column = new ArrayList&lt;&gt;();
+        for (int i = 0; i &lt; 3; i++) {
+            row.add(new ArrayList&lt;&gt;());
+        }
+        for (int i = 0; i &lt; 3; i++) {
+            for (int j = 0; j &lt; 3; j++) {
+                row.get(i).add(ee[i][j]);
+            }
+        }
+        for (int j = 0; j &lt; 3; j++) {
+            column.add(new ArrayList&lt;&gt;());
+        }
+        for (int j = 0; j &lt; 3; j++) {
+            for (int i = 0; i &lt; 3; i++) {
+                column.get(j).add(ee[i][j]);
+            }
+        }
+        System.out.println(row);
+        System.out.println(column);
+
+        System.out.println(&quot;&quot;);
+
+        ee[0][0].setX(9);
+        ee[0][0].setY(9);
+        System.out.println(Arrays.deepToString(ee));
+        System.out.println(row);
+        System.out.println(column);
+    }
+
+    static class Entity {
+        private int x;
+        private int y;
+
+        public int getX() {
+            return x;
+        }
+
+        public void setX(int x) {
+            this.x = x;
+        }
+
+        public int getY() {
+            return y;
+        }
+
+        public void setY(int y) {
+            this.y = y;
+        }
+
+        @Override
+        public String toString() {
+            return &quot;Entity{&quot; +
+                    &quot;x=&quot; + x +
+                    &quot;, y=&quot; + y +
+                    '}';
+        }
+    }
+</code></pre>
+<p>输出结果</p>
+<pre><code>[[Entity{x=0, y=0}, Entity{x=0, y=1}, Entity{x=0, y=2}], [Entity{x=1, y=0}, Entity{x=1, y=1}, Entity{x=1, y=2}], [Entity{x=2, y=0}, Entity{x=2, y=1}, Entity{x=2, y=2}]]
+[[Entity{x=0, y=0}, Entity{x=0, y=1}, Entity{x=0, y=2}], [Entity{x=1, y=0}, Entity{x=1, y=1}, Entity{x=1, y=2}], [Entity{x=2, y=0}, Entity{x=2, y=1}, Entity{x=2, y=2}]]
+[[Entity{x=0, y=0}, Entity{x=1, y=0}, Entity{x=2, y=0}], [Entity{x=0, y=1}, Entity{x=1, y=1}, Entity{x=2, y=1}], [Entity{x=0, y=2}, Entity{x=1, y=2}, Entity{x=2, y=2}]]
+
+[[Entity{x=9, y=9}, Entity{x=0, y=1}, Entity{x=0, y=2}], [Entity{x=1, y=0}, Entity{x=1, y=1}, Entity{x=1, y=2}], [Entity{x=2, y=0}, Entity{x=2, y=1}, Entity{x=2, y=2}]]
+[[Entity{x=9, y=9}, Entity{x=0, y=1}, Entity{x=0, y=2}], [Entity{x=1, y=0}, Entity{x=1, y=1}, Entity{x=1, y=2}], [Entity{x=2, y=0}, Entity{x=2, y=1}, Entity{x=2, y=2}]]
+[[Entity{x=9, y=9}, Entity{x=1, y=0}, Entity{x=2, y=0}], [Entity{x=0, y=1}, Entity{x=1, y=1}, Entity{x=2, y=1}], [Entity{x=0, y=2}, Entity{x=1, y=2}, Entity{x=2, y=2}]]
+
+</code></pre>
+<p>神奇的地方就在这里，行列关联的List里面的数值跟随着一起改变了。</p>
+<p>这是为什么呢？</p>
+<blockquote>
+<p>Java的集合中存放的类型</p>
+<p>（1）如果是基本数据类型，则是value；</p>
+<p>（2） 如果是复合数据类型，则是引用的地址；</p>
+</blockquote>
+<p>List中放入对象时，实际放入的不是对象本身而是对象的引用；</p>
+<p>对象数组只需要自己占据一部分内存空间，List来引用对象，就不需要额外有数组内存的开支；</p>
+<p>同时对原始数组中对象的修改（注意，修改并非new一个对象，因为new一个就开辟了新的内存地址，引用还会指向原来的地址），就可以做到<strong>遍历一次、处处可见</strong>了！</p>
+<hr>
+<p>由此画一张实体与引用关系图：</p>
+<figure data-type="image" tabindex="1"><img src="https://img2020.cnblogs.com/blog/1473851/202012/1473851-20201218172900584-1658449329.jpg" alt="" loading="lazy"></figure>
+<p>这样以来，数组内存还是原来的一块数组内存，我们只需用List关联引用，就不用需要每次遍历和判断的时候开辟额外空间了；</p>
+<p>然后每次对原始数格处理的时候，其各个维度List都不用手动再去修改；每次对各个维度数字进行判断的时候，也就都是在对原始数格进行遍历；其<strong>空间复杂度</strong>没有增加。</p>
+<hr>
+<h2 id="总结"><strong>总结</strong></h2>
+<ol>
+<li>使用<strong>递归+随机数组</strong>进行枚举和试错——逻辑简明高效</li>
+<li>使用<strong>List+对象</strong>构建数独格子（行、列、3x3子宫格）各维度关联</li>
+<li>使用List遍历和排查重复——方法调用简单，<strong>引用</strong>完美控制了空间复杂度</li>
+</ol>
+<p><strong>分析到此，与其说是算法，不如说是对Java对象的构建，通过对Java对象的有效构建，来高效、简便的完成了一次数独的生成和求解。</strong></p>
+<p>这便是面向对象代码构建的独到之处！</p>
+<p>妙哉妙哉！</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[CentOS 7 mini版本安装后的常用操作]]></title>
+        <id>https://jobsleecn.github.io/post/centos-7-mini-ban-ben-an-zhuang-hou-de-chang-yong-cao-zuo/</id>
+        <link href="https://jobsleecn.github.io/post/centos-7-mini-ban-ben-an-zhuang-hou-de-chang-yong-cao-zuo/">
+        </link>
+        <updated>2021-05-22T10:50:41.000Z</updated>
+        <content type="html"><![CDATA[<ol>
+<li>网络配置</li>
+</ol>
+<pre><code class="language-bash">vi /etc/sysconfig/network-scripts/ifcfg-eth?
+</code></pre>
+<p>?处一般情况下是0，我的是33，这个名称可以后期修改，修改时注意使用ls查看目录文件<br>
+把文件内容</p>
+<pre><code class="language-bash">ONBOOT=no
+</code></pre>
+<p>改为</p>
+<pre><code class="language-bash">ONBOOT=yes
+</code></pre>
+<p>然后重启网络服务</p>
+<pre><code class="language-bash">service network restart
+</code></pre>
+<p>如果是静态IP，则需要在配置文件中加入</p>
+<pre><code class="language-bash">IPADDR=...(静态IP) 
+GETAWAY=...(网关) 
+NETMASK=...(子网掩码)
+</code></pre>
+<ol start="2">
+<li>repo源配置</li>
+</ol>
+<p>切换阿里源</p>
+<pre><code class="language-bash">mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup
+wget -O /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-7.repo
+yum clean all
+yum makecache
+</code></pre>
+<ol start="3">
+<li>基本组件更新</li>
+</ol>
+<pre><code class="language-bash">yum update
+</code></pre>
+<ol start="4">
+<li>UTC时间本地化</li>
+</ol>
+<pre><code class="language-bash">yum install ntpdate
+vi /etc/sysconfig/clock
+</code></pre>
+<p>将下面文本中的UTC选项设置为false</p>
+<pre><code class="language-bash">ZONE=”Asia/Shanghai” 
+UTC=false 
+ARC=false
+</code></pre>
+<p>将linux的时区设置为上海时区</p>
+<pre><code class="language-bash">ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+</code></pre>
+<p>设置硬件时间和系统时间一致并校准</p>
+<pre><code class="language-bash">ntpdate cn.pool.ntp.org
+/sbin/hwclock --systohc
+</code></pre>
+<ol start="5">
+<li>常用开发软件</li>
+</ol>
+<pre><code class="language-bash">yum install vim gcc make git net-tools kernel-headers kernel-devel
+</code></pre>
+<p>其中net-tools提供ifconfig工具，以及kernel-headers和kernel-devel是为了后面安装VMware Tools做必要的准备<br>
+6. VMware Tools（虚拟机）</p>
+<pre><code class="language-bash">mkdir /mnt/cdrom
+mount /dev/cdrom /mnt/cdrom
+cd /mnt/cdrom
+tar xzvf VMwareTools-*.tar.gz
+cd vmware-tools-distrib
+./vmware-install.pl
+</code></pre>
+<p>其中*号为VMware Tools的版本号<br>
+7. 图形界面</p>
+<pre><code class="language-bash">yum groupinstall &quot;X Window System&quot;
+yum groupinstall &quot;GNOME Desktop&quot;
+</code></pre>
+<p>这里选择的是GNOME桌面环境<br>
+查看我们可以安装的桌面环境</p>
+<pre><code class="language-bash">yum grouplist
+</code></pre>
+<p>设置系统默认启动环境</p>
+<pre><code class="language-bash">systemctl set-default multi-user.target  //设置成命令模式
+systemctl set-default graphical.target  //设置成图形模式
+</code></pre>
+<p>重启</p>
+<pre><code class="language-bash">reboot
+</code></pre>
+<ol start="8">
+<li>Enjoy!</li>
+</ol>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[使用caddy实现非标准端口https]]></title>
+        <id>https://jobsleecn.github.io/post/shi-yong-caddy-shi-xian-fei-biao-zhun-duan-kou-https/</id>
+        <link href="https://jobsleecn.github.io/post/shi-yong-caddy-shi-xian-fei-biao-zhun-duan-kou-https/">
+        </link>
+        <updated>2021-05-22T10:47:27.000Z</updated>
+        <content type="html"><![CDATA[<p>近来使用<a href="https://github.com/halo-dev/halo">Halo</a>搭建博客，并顺便把<a href="https://github.com/aquanlerou/WeHalo">WeHalo</a>小程序也把玩了起来，但是发现几个非常棘手的问题：</p>
+<ol>
+<li>根据访问日志发现有三方在刷取关键接口的请求，http请求在部分情况下会暴露出很显著的安全问题；</li>
+<li>小程序强制依赖https，非https连接不能使用，尝试三方开源的<a href="https://github.com/guren-cloud/v-request">v-request</a>替换也是效果不太好；</li>
+<li>第三个问题是由以上问题衍生的，如果升级https网站域名首先就是需要备案，对于个人博客来说，稳定性要求没有那么高，备案流程复杂，想想还是算了吧；</li>
+</ol>
+<p>那能怎么办呢？条件不够，技术来凑。</p>
+<p>众所周知，http和https请求的默认端口分别为80和443，那么能否实现非标准端口的https呢，这样就能绕过未备案的限制。</p>
+<p>经过对https资料的查找，发现有很大希望实现，有这么关键的几点。</p>
+<p>https基本原理就不在熬述了，直接引用资料原文：</p>
+<blockquote>
+<p>通过 ACME 协议向 Let's Encrypt 证明自己的域名所有权的过程就叫做 Challenge （验证），目前有三种 Challenge 的方式：</p>
+<ul>
+<li>HTTP-01</li>
+<li>NS-01</li>
+<li>TLS-SNI-01 （已禁用）</li>
+<li>TLS-ALPN-01</li>
+</ul>
+<p>HTTP-01是目前最常见的验证方式，但是该验证方式需要通过80端口开放一个路径给Let's Encrypt访问它提供的 token来验证你的域名所有权，因此在80端口被封锁的情况下这个验证方式是不现实的；</p>
+<p>类似的，TLS-ALPN-01需要通过443端口访问来验证，也是行不通；</p>
+<p>这样对于国内家庭带宽用户来说就只剩下了一种方式：DNS-01。</p>
+<p>了解这些后，解决方案就一目了然了，就是用DNS-01方式进行https验证。</p>
+</blockquote>
+<p>有了这些信息，想法可行，接下来就是寻找合适的工具来实现了。</p>
+<p>caddy给我们进行了很好的集成，基于golang的caddy就是一个编译过后的二进制文件，轻巧、实用。</p>
+<p>caddy原生https的实现是基于Let's Encrypt的，想要使用DNS-01的https实现需要附带插件，这里我们阿里云的dns服务商，需要选择 github.com/caddy-dns/lego-deprecated；</p>
+<p>下载完成后的caddy文件就是包含附件的可执行文件了；</p>
+<p>接下来我们编写Caddyfile配置文件，有两个配置要点：</p>
+<ol>
+<li>指定http和https监听端口；</li>
+<li>配置请求指向；</li>
+</ol>
+<pre><code>{
+  http_port 1234
+  https_port 2234
+}
+xxx {
+  reverse_proxy localhost:8081
+  tls {
+    dns lego_deprecated alidns
+  }
+}
+</code></pre>
+<p>配置完成还不行，我们需要按照<a href="https://go-acme.github.io/lego/dns/alidns/">lego_deprecated的文档</a>，建立文件，配置以下：</p>
+<pre><code>ALICLOUD_ACCESS_KEY=xxx
+ALICLOUD_SECRET_KEY=xxx
+</code></pre>
+<p>关键参数（此部分参数需要从阿里云后台进行获取），便于联系对应dns进行相关的操作；</p>
+<p>最后使用caddy指令带上配置好的文件直接启动</p>
+<pre><code>caddy run --config Caddyfile --envfile alidns.env
+</code></pre>
+<p>大功告成！</p>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Hello Gridea，给优秀的Gridea工具]]></title>
         <id>https://jobsleecn.github.io/post/hello-gridea/</id>
