@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://jobsleecn.github.io</id>
     <title>Jobs.Lee&apos;s Blog</title>
-    <updated>2021-05-23T14:17:12.655Z</updated>
+    <updated>2021-05-23T14:24:57.171Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://jobsleecn.github.io"/>
     <link rel="self" href="https://jobsleecn.github.io/atom.xml"/>
@@ -576,5 +576,267 @@ ALICLOUD_SECRET_KEY=xxx
 <p>尽情发挥你的才华吧！</p>
 <p>😘 Enjoy~</p>
 ]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[对第一次面试知识点内容的总结和补充]]></title>
+        <id>https://jobsleecn.github.io/post/dui-di-yi-ci-mian-shi-zhi-shi-dian-nei-rong-de-zong-jie-he-bu-chong/</id>
+        <link href="https://jobsleecn.github.io/post/dui-di-yi-ci-mian-shi-zhi-shi-dian-nei-rong-de-zong-jie-he-bu-chong/">
+        </link>
+        <updated>2018-06-27T11:36:00.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="这是由一次面试开始的第一篇blog">这是由第一次面试开始的第一篇Blog，写于最开始的开始</h1>
+<p>本次面试方向为Java架构方向，涉及到Java新的应用场景，相当于打开了Java的另一扇大门。由此开始了我的第一篇博客，对相关知识点和内容进行总结和实践。</p>
+<p>其中包括如下知识点：</p>
+<ul>
+<li><strong>Java中的hashCode()方法及相关应用</strong></li>
+<li><strong>==和equal()的细节问题</strong></li>
+<li><strong>jvm虚拟机内存结构</strong></li>
+<li><strong>IO拥塞及5种IO模型</strong></li>
+<li><strong>数据库分表分库</strong></li>
+<li><strong>Redis缓存数据库</strong></li>
+<li><strong>MyCat中间件</strong></li>
+</ul>
+<hr />
+<ul>
+<li>快捷目录</li>
+</ul>
+<p>&nbsp;</p>
+<div class="toc">
+<div class="toc">
+<ul>
+<li><a href="#这是由一次面试开始的第一篇blog" rel="nofollow">这是由一次面试开始的第一篇Blog</a>
+<ul>
+<li><a href="#java中的hashcode方法及相关应用" rel="nofollow">Java中的hashCode()方法及相关应用</a></li>
+<li><a href="#和equal的细节问题" rel="nofollow">==和equal()的细节问题</a></li>
+<li><a href="#jvm虚拟机内存结构" rel="nofollow">jvm虚拟机内存结构</a></li>
+<li><a href="#io拥塞及5种io模型" rel="nofollow">IO拥塞及5种IO模型</a></li>
+<li><a href="#数据库分表分库" rel="nofollow">数据库分表分库</a></li>
+<li><a href="#redis缓存数据库" rel="nofollow">Redis缓存数据库</a></li>
+<li><a href="#mycat中间件" rel="nofollow">MyCat中间件</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>&nbsp;</p>
+<hr />
+<h2 id="java中的hashcode方法及相关应用">Java中的hashCode()方法及相关应用</h2>
+<p>Java中的Object类为所有类的父类，在Object下面包含了很多基础方法，譬如equals()、getClass()、hashCode()、toString()等。</p>
+<p>hashCode()作为基础方法中重要的一员，用于返回对象的hash值，其返回值为int类型。</p>
+<p>但是仅仅返回对象的hash值有什么意义吗？要想真正理解hashCode()方法的作用，必须要从hash散列和Java集合说起。</p>
+<ul>
+<li>
+<p>hash散列：把任意长度的输入，通过散列算法变换成固定长度的输出，该输出就是散列值。通过散列计算地址来存储数据，再使用hash散列函数访问数据，能使对一个数据序列的访问过程更加迅速有效，数据元素将被更快地定位。hash算法会尽量选择更好的方案来减少碰撞，但在某些情况下，hash散列也会得出相同的值，此时便需要根据实际需要进行冲突的解决，因此，相同的hash值并不意味着目标对象是相同的。</p>
+</li>
+<li>
+<p>Java集合：在Java中，HashMap是使用非常多的集合，它是基于哈希表的 Map 接口的实现，以key-value的形式存在，而HashSet仅存储对象，同时HashSet中不允许有重复的元素。当向一个Set集合中添加元素时，先调用这个元素的hashCode()方法，就能直接确定该元素的物理地址，当这个位置上没有元素，它就可以直接存储在这个位置上，不用再进行任何比较；但是如果这个位置上已经有元素，就需要调用它的equals()方法与新元素进行比较，相同的话就不再存储，不相同就散列其它的地址。可以发现，在以上过程中涉及到equals()方法和hashCode()方法性能上的差距，Set集合在添加元素时，并没有直接通过equals()方法全权负责，而是先由hashCode()方法进行判断，再根据结果选择性调用equlas()方法。相关源代码如下：</p>
+</li>
+</ul>
+<pre class="prettyprint"><code class="language-Java hljs cs"><span class="hljs-keyword">public</span> V <span class="hljs-title">put</span>(K key, V <span class="hljs-keyword">value</span>) {
+        <span class="hljs-keyword">return</span> putVal(hash(key), key, <span class="hljs-keyword">value</span>, <span class="hljs-keyword">false</span>, <span class="hljs-keyword">true</span>);
+    }</code></pre>
+<pre class="prettyprint"><code class="language-Java hljs cs">final V putVal(<span class="hljs-keyword">int</span> hash, K key, V <span class="hljs-keyword">value</span>, boolean onlyIfAbsent,
+                   boolean evict) {
+        Node&lt;K,V&gt;[] tab; Node&lt;K,V&gt; p; <span class="hljs-keyword">int</span> n, i;
+        <span class="hljs-keyword">if</span> ((tab = table) == <span class="hljs-keyword">null</span> || (n = tab.length) == <span class="hljs-number">0</span>)
+            n = (tab = resize()).length;
+        <span class="hljs-keyword">if</span> ((p = tab[i = (n - <span class="hljs-number">1</span>) &amp; hash]) == <span class="hljs-keyword">null</span>)
+            tab[i] = newNode(hash, key, <span class="hljs-keyword">value</span>, <span class="hljs-keyword">null</span>);
+        <span class="hljs-keyword">else</span> {
+            Node&lt;K,V&gt; e; K k;
+            <span class="hljs-keyword">if</span> (p.hash == hash &amp;&amp;
+                ((k = p.key) == key || (key != <span class="hljs-keyword">null</span> &amp;&amp; key.equals(k))))
+                e = p;
+            <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (p instanceof TreeNode)
+                e = ((TreeNode&lt;K,V&gt;)p).putTreeVal(<span class="hljs-keyword">this</span>, tab, hash, key, <span class="hljs-keyword">value</span>);
+            <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> binCount = <span class="hljs-number">0</span>; ; ++binCount) {
+                    <span class="hljs-keyword">if</span> ((e = p.next) == <span class="hljs-keyword">null</span>) {
+                        p.next = newNode(hash, key, <span class="hljs-keyword">value</span>, <span class="hljs-keyword">null</span>);
+                        <span class="hljs-keyword">if</span> (binCount &gt;= TREEIFY_THRESHOLD - <span class="hljs-number">1</span>) <span class="hljs-comment">// -1 for 1st</span>
+                            treeifyBin(tab, hash);
+                        <span class="hljs-keyword">break</span>;
+                    }
+                    <span class="hljs-keyword">if</span> (e.hash == hash &amp;&amp;
+                        ((k = e.key) == key || (key != <span class="hljs-keyword">null</span> &amp;&amp; key.equals(k))))
+                        <span class="hljs-keyword">break</span>;
+                    p = e;
+                }
+            }
+            <span class="hljs-keyword">if</span> (e != <span class="hljs-keyword">null</span>) { <span class="hljs-comment">// existing mapping for key</span>
+                V oldValue = e.<span class="hljs-keyword">value</span>;
+                <span class="hljs-keyword">if</span> (!onlyIfAbsent || oldValue == <span class="hljs-keyword">null</span>)
+                    e.<span class="hljs-keyword">value</span> = <span class="hljs-keyword">value</span>;
+                afterNodeAccess(e);
+                <span class="hljs-keyword">return</span> oldValue;
+            }
+        }
+        ++modCount;
+        <span class="hljs-keyword">if</span> (++size &gt; threshold)
+            resize();
+        afterNodeInsertion(evict);
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">null</span>;
+    }</code></pre>
+<pre class="prettyprint"><code class="language-Java hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">add</span>(E e) {
+        <span class="hljs-keyword">return</span> map.put(e, PRESENT)==<span class="hljs-keyword">null</span>;
+    }</code></pre>
+<p>由此，可以总结如下：</p>
+<ol>
+<li>相同的对象具有相同的hash值</li>
+<li>equals()相等的对象一定具有相同的hash值</li>
+<li>hashCode()相同的对象不一定equals()相等</li>
+<li>在比较场景下，hashCode()方法性能较equals()方法性能较好（一个用值来比较，一个用对象来比较）</li>
+<li>hashCode()与equals()的重写问题：若重写了equals()方法，则有必要重写hashCode()方法(此处可以深入探讨)</li>
+</ol><hr />
+<h2 id="和equal的细节问题">==和equal()的细节问题</h2>
+<p>equals()是java.lang.Object类的方法，要想说明==和equals()的区别，还要从代码开始：</p>
+<pre class="prettyprint"><code class="language-Java hljs avrasm">        String str1, str2, str3 = <span class="hljs-string">"abc"</span>, str4 = <span class="hljs-string">"abc"</span><span class="hljs-comment">;</span>
+        str1 = new String(<span class="hljs-string">"abc"</span>)<span class="hljs-comment">;</span>
+        str2 = new String(<span class="hljs-string">"abc"</span>)<span class="hljs-comment">;</span>
+        StringBuffer strb1 = new StringBuffer(<span class="hljs-string">"abc"</span>)<span class="hljs-comment">;</span>
+        StringBuffer strb2 = new StringBuffer(<span class="hljs-string">"abc"</span>)<span class="hljs-comment">;</span>
+<pre><code>    System&lt;span class=&quot;hljs-preprocessor&quot;&gt;.out&lt;/span&gt;&lt;span class=&quot;hljs-preprocessor&quot;&gt;.println&lt;/span&gt;(str1==str2)&lt;span class=&quot;hljs-comment&quot;&gt;;&lt;/span&gt;
+    System&lt;span class=&quot;hljs-preprocessor&quot;&gt;.out&lt;/span&gt;&lt;span class=&quot;hljs-preprocessor&quot;&gt;.println&lt;/span&gt;(str1&lt;span class=&quot;hljs-preprocessor&quot;&gt;.equals&lt;/span&gt;(str2))&lt;span class=&quot;hljs-comment&quot;&gt;;&lt;/span&gt;
+    System&lt;span class=&quot;hljs-preprocessor&quot;&gt;.out&lt;/span&gt;&lt;span class=&quot;hljs-preprocessor&quot;&gt;.println&lt;/span&gt;(str3==str4)&lt;span class=&quot;hljs-comment&quot;&gt;;&lt;/span&gt;
+    System&lt;span class=&quot;hljs-preprocessor&quot;&gt;.out&lt;/span&gt;&lt;span class=&quot;hljs-preprocessor&quot;&gt;.println&lt;/span&gt;(str3&lt;span class=&quot;hljs-preprocessor&quot;&gt;.equals&lt;/span&gt;(str4))&lt;span class=&quot;hljs-comment&quot;&gt;;&lt;/span&gt;
+    System&lt;span class=&quot;hljs-preprocessor&quot;&gt;.out&lt;/span&gt;&lt;span class=&quot;hljs-preprocessor&quot;&gt;.println&lt;/span&gt;(strb1==strb2)&lt;span class=&quot;hljs-comment&quot;&gt;;&lt;/span&gt;
+    System&lt;span class=&quot;hljs-preprocessor&quot;&gt;.out&lt;/span&gt;&lt;span class=&quot;hljs-preprocessor&quot;&gt;.println&lt;/span&gt;(strb1&lt;span class=&quot;hljs-preprocessor&quot;&gt;.equals&lt;/span&gt;(strb2))&lt;span class=&quot;hljs-comment&quot;&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+</code></pre>
+<p>控制台打印结果如下：</p>
+<pre class="prettyprint"><code class="language-Java hljs bash"><span class="hljs-literal">false</span>
+<span class="hljs-literal">true</span>
+<span class="hljs-literal">true</span>
+<span class="hljs-literal">true</span>
+<span class="hljs-literal">false</span>
+<span class="hljs-literal">false</span></code></pre>
+<p>可是为什么会造成这样的结果呢，这就设计到==和equals()的一些细节问题。 <br />
+经过查阅资料和源代码得知，==和equals()在比较上存在以下区别：</p>
+<ol>
+<li>&ldquo;==&rdquo;比较两个字符串变量本身的值，即两个对象在内存中的首地址</li>
+<li>equals()比较字符串中所包含的内容是否相同，因为在String类中重写了equals()方法，比较的是字符串的内容而不是其地址，涉及到的源代码如下：</li>
+</ol>
+<pre class="prettyprint"><code class="language-Java hljs cs"><span class="hljs-keyword">public</span> boolean <span class="hljs-title">equals</span>(Object anObject) {
+        <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span> == anObject) {
+            <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;
+        }
+        <span class="hljs-keyword">if</span> (anObject instanceof String) {
+            String anotherString = (String)anObject;
+            <span class="hljs-keyword">int</span> n = <span class="hljs-keyword">value</span>.length;
+            <span class="hljs-keyword">if</span> (n == anotherString.<span class="hljs-keyword">value</span>.length) {
+                <span class="hljs-keyword">char</span> v1[] = <span class="hljs-keyword">value</span>;
+                <span class="hljs-keyword">char</span> v2[] = anotherString.<span class="hljs-keyword">value</span>;
+                <span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>;
+                <span class="hljs-keyword">while</span> (n-- != <span class="hljs-number">0</span>) {
+                    <span class="hljs-keyword">if</span> (v1[i] != v2[i])
+                        <span class="hljs-keyword">return</span> <span class="hljs-keyword">false</span>;
+                    i++;
+                }
+                <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;
+            }
+        }
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">false</span>;
+    }</code></pre>
+<ol>
+<li>StringBuffer类中没有重新定义equals这个方法，因此这个方法就来自Object类，而Object类中的equals方法是用来比较地址的，所以等于false</li>
+<li>对于str3和str4是由字符串生成的变量，因此所存放的内存地址是相同的</li>
+</ol>
+<p>下面再来测试一段代码：</p>
+<pre class="prettyprint"><code class="language-Java hljs avrasm">        int i1 = <span class="hljs-number">1</span>, i2 = <span class="hljs-number">2</span>, i3 = <span class="hljs-number">1</span><span class="hljs-comment">;</span>
+<pre><code>    System&lt;span class=&quot;hljs-preprocessor&quot;&gt;.out&lt;/span&gt;&lt;span class=&quot;hljs-preprocessor&quot;&gt;.println&lt;/span&gt;(i1==i2)&lt;span class=&quot;hljs-comment&quot;&gt;;&lt;/span&gt;
+    System&lt;span class=&quot;hljs-preprocessor&quot;&gt;.out&lt;/span&gt;&lt;span class=&quot;hljs-preprocessor&quot;&gt;.println&lt;/span&gt;(i1==i3)&lt;span class=&quot;hljs-comment&quot;&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+</code></pre>
+<p>控制台输出结果如下：</p>
+<pre class="prettyprint"><code class="language-Java hljs bash"><span class="hljs-literal">false</span>
+<span class="hljs-literal">true</span></code></pre>
+<p>由以上结论，可知==比较的是对象在内存中的首地址。这样以来可以说明jvm编译机制：int类型常量会根据大小区分指令，0~5一段，-128~127一段，-32768-32767一段，其余会作为常量放入常量池。其常量池的地址是相同的。</p>
+<p>接下来再尝试下Integer类的情况：</p>
+<pre class="prettyprint"><code class="language-Java hljs avrasm">        Integer ig1 = new Integer(<span class="hljs-number">123</span>)<span class="hljs-comment">;</span>
+        Integer ig2 = new Integer(<span class="hljs-number">123</span>)<span class="hljs-comment">;</span>
+        Integer ig3 = new Integer(<span class="hljs-number">321</span>)<span class="hljs-comment">;</span>
+        int i4 = ig3<span class="hljs-comment">;</span>
+<pre><code>    System&lt;span class=&quot;hljs-preprocessor&quot;&gt;.out&lt;/span&gt;&lt;span class=&quot;hljs-preprocessor&quot;&gt;.println&lt;/span&gt;(ig1==ig2)&lt;span class=&quot;hljs-comment&quot;&gt;;&lt;/span&gt;
+    System&lt;span class=&quot;hljs-preprocessor&quot;&gt;.out&lt;/span&gt;&lt;span class=&quot;hljs-preprocessor&quot;&gt;.println&lt;/span&gt;(ig1==ig3)&lt;span class=&quot;hljs-comment&quot;&gt;;&lt;/span&gt;
+    System&lt;span class=&quot;hljs-preprocessor&quot;&gt;.out&lt;/span&gt;&lt;span class=&quot;hljs-preprocessor&quot;&gt;.println&lt;/span&gt;(ig1&lt;span class=&quot;hljs-preprocessor&quot;&gt;.equals&lt;/span&gt;(ig2))&lt;span class=&quot;hljs-comment&quot;&gt;;&lt;/span&gt;
+    System&lt;span class=&quot;hljs-preprocessor&quot;&gt;.out&lt;/span&gt;&lt;span class=&quot;hljs-preprocessor&quot;&gt;.println&lt;/span&gt;(ig1&lt;span class=&quot;hljs-preprocessor&quot;&gt;.equals&lt;/span&gt;(ig3))&lt;span class=&quot;hljs-comment&quot;&gt;;&lt;/span&gt;
+    System&lt;span class=&quot;hljs-preprocessor&quot;&gt;.out&lt;/span&gt;&lt;span class=&quot;hljs-preprocessor&quot;&gt;.println&lt;/span&gt;(ig3==i4)&lt;span class=&quot;hljs-comment&quot;&gt;;&lt;/span&gt;
+    System&lt;span class=&quot;hljs-preprocessor&quot;&gt;.out&lt;/span&gt;&lt;span class=&quot;hljs-preprocessor&quot;&gt;.println&lt;/span&gt;(ig3&lt;span class=&quot;hljs-preprocessor&quot;&gt;.equals&lt;/span&gt;(i4))&lt;span class=&quot;hljs-comment&quot;&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+</code></pre>
+<p>控制台输出显示如下：</p>
+<pre class="prettyprint"><code class="language-Java hljs bash"><span class="hljs-literal">false</span>
+<span class="hljs-literal">false</span>
+<span class="hljs-literal">true</span>
+<span class="hljs-literal">false</span>
+<span class="hljs-literal">true</span>
+<span class="hljs-literal">true</span></code></pre>
+<p>可以发现，在Integer的实例下，==是比较地址的，而equals()是比较内容的。仔细查看源代码：</p>
+<pre class="prettyprint"><code class="language-Java hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">equals</span>(Object obj) {
+        <span class="hljs-keyword">if</span> (obj <span class="hljs-keyword">instanceof</span> Integer) {
+            <span class="hljs-keyword">return</span> value == ((Integer)obj).intValue();
+        }
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">false</span>;
+    }</code></pre>
+<p>可见，Integer类重写了equals()方法，并且自动拆箱是调用Integer.valueOf()方法。</p>
+<hr />
+<h2 id="jvm虚拟机内存结构">jvm虚拟机内存结构</h2>
+<p>由第二部分可知java代码在编译过程中涉及到内存机制问题，在这里简单设计下jvm虚拟机的内存结构。 <br />
+借用下《深入理解Java虚拟机（第二版）》中的描述：</p>
+<p><img title="" src="https://img-blog.csdn.net/20180627184150659?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2FxaXUyMDE4/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70" alt="jvm内存结构" /></p>
+<p>这里暂时作为参考和总结，具体细节比较复杂，在之后再做深入讨论。</p>
+<hr />
+<h2 id="io拥塞及5种io模型">IO拥塞及5种IO模型</h2>
+<p>I/O：Input/Output 输入/输出 <br />
+大致可分为内存IO、网络IO、磁盘IO</p>
+<p>5种IO模型分别是阻塞IO模型、非阻塞IO模型、IO复用模型、信号驱动的IO模型、异步IO模型；前4种为同步IO操作，只有异步IO模型是异步IO操作。</p>
+<p>此处参考大牛博客，对于消息同步异步以及IO模型进行了清晰和详细的阐述：</p>
+<blockquote>
+<p><a href="https://www.cnblogs.com/wxl-dede/p/5134636.html" rel="nofollow">https://www.cnblogs.com/wxl-dede/p/5134636.html</a></p>
+</blockquote>
+<hr />
+<h2 id="数据库分表分库">数据库分表分库</h2>
+<p>数据库分表分库思想，其英文名为Sharding，意为&ldquo;分片&rdquo;。</p>
+<p>此处参考大牛博客，其全面的总结和中间件的汇总，让人十分受益：</p>
+<blockquote>
+<p><a href="https://www.cnblogs.com/jshen/p/7682502.html" rel="nofollow">https://www.cnblogs.com/jshen/p/7682502.html</a></p>
+</blockquote>
+<hr />
+<h2 id="redis缓存数据库">Redis缓存数据库</h2>
+<p>Redis 是一个高性能的key-value数据库。</p>
+<blockquote>
+<p>Redis 与其他 key - value 缓存产品有以下三个特点：</p>
+<ul>
+<li>
+<p>Redis支持数据的持久化，可以将内存中的数据保存在磁盘中，重启的时候可以再次加载进行使用</p>
+</li>
+<li>
+<p>Redis不仅仅支持简单的key-value类型的数据，同时还提供list，set，zset，hash等数据结构的存储</p>
+</li>
+<li>
+<p>Redis支持数据的备份，即master-slave模式的数据备份</p>
+</li>
+  </ul>
+<p>Redis与其他key-value存储有什么不同？</p>
+<ul>
+<li>
+<p>Redis有着更为复杂的数据结构并且提供对他们的原子性操作，这是一个不同于其他数据库的进化路径。Redis的数据类型都是基于基本数据结构的同时对程序员透明，无需进行额外的抽象</p>
+</li>
+<li>
+<p>Redis运行在内存中但是可以持久化到磁盘，所以在对不同数据集进行高速读写时需要权衡内存，因为数据量不能大于硬件内存。在内存数据库方面的另一个优点是，相比在磁盘上相同的复杂的数据结构，在内存中操作起来非常简单，这样Redis可以做很多内部复杂性很强的事情。同时，在磁盘格式方面他们是紧凑的以追加的方式产生的，因为他们并不需要进行随机访问</p>
+</li>
+  </ul>
+</blockquote>
+<hr />
+<h2 id="mycat中间件">MyCat中间件</h2>
+<p>正如百度百科定义，MyCat是代替昂贵的oracle的MySQL集群中间件。</p>
+<blockquote>
+<p>Mycat的原理并不复杂，复杂的是代码，如果代码也不复杂，那么早就成为一个传说了</p>
+<p>Mycat的原理中最重要的一个动词是&ldquo;拦截&rdquo;，它拦截了用户发送过来的SQL语句，首先对SQL语句做了一些特定的分析：如分片分析、路由分析、读写分离分析、缓存分析等，然后将此SQL发往后端的真实数据库，并将返回的结果做适当的处理，最终再返回给用户</p>
+</blockquote>
+<p>参考相关博客：</p>
+<blockquote>
+<p><a href="https://www.cnblogs.com/andy6/p/6622324.html" rel="nofollow">https://www.cnblogs.com/andy6/p/6622324.html</a></p>
+</blockquote>
+<hr />
+<p><strong>其中内容有详有略，有些部分还需要不断地学习，先做引用之后会不断深入。记第一篇博客，加油！</strong></p>
+<hr />
+<p>&nbsp;</p>]]></content>
     </entry>
 </feed>
