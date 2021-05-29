@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://jobsleecn.github.io</id>
     <title>Jobs.Lee&apos;s Blog</title>
-    <updated>2021-05-23T14:32:20.272Z</updated>
+    <updated>2021-05-29T08:25:39.322Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://jobsleecn.github.io"/>
     <link rel="self" href="https://jobsleecn.github.io/atom.xml"/>
@@ -10,6 +10,60 @@
     <logo>https://jobsleecn.github.io/images/avatar.png</logo>
     <icon>https://jobsleecn.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, Jobs.Lee&apos;s Blog</rights>
+    <entry>
+        <title type="html"><![CDATA[更换Homebrew为中科大源]]></title>
+        <id>https://jobsleecn.github.io/post/geng-huan-homebrew-wei-zhong-ke-da-yuan/</id>
+        <link href="https://jobsleecn.github.io/post/geng-huan-homebrew-wei-zhong-ke-da-yuan/">
+        </link>
+        <updated>2021-05-29T08:20:25.000Z</updated>
+        <content type="html"><![CDATA[<p>Homebrew的更新源由三部分组成：本体（brew.git）、核心（homebrew-core.git）以及二进制预编译包（homebrew-bottles）</p>
+<pre><code class="language-bash"># 替换brew.git:
+cd &quot;$(brew --repo)&quot;
+# 中国科大:
+git remote set-url origin https://mirrors.ustc.edu.cn/brew.git
+
+# 替换homebrew-core.git:
+cd &quot;$(brew --repo)/Library/Taps/homebrew/homebrew-core&quot;
+# 中国科大:
+git remote set-url origin https://mirrors.ustc.edu.cn/homebrew-core.git
+
+# 替换homebrew-bottles:
+# 中国科大:
+echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' &gt;&gt; ~/.bash_profile
+source ~/.bash_profile
+
+# 应用生效:
+brew update
+</code></pre>
+<p>在使用其他源的时候，最好先尝试访问其链接看看是否健在，并且因为历史原因，最初的brew.git是叫homebrew.git的，而现在部分更新源早已随官方更名，所以切记要验证。</p>
+<pre><code class="language-bash"># 诊断Homebrew的问题:
+brew doctor
+
+# 重置brew.git设置:
+cd &quot;$(brew --repo)&quot;
+git fetch
+git reset --hard origin/master
+
+# homebrew-core.git同理:
+cd &quot;$(brew --repo)/Library/Taps/homebrew/homebrew-core&quot;
+git fetch
+git reset --hard origin/master
+
+# 应用生效:
+brew update
+</code></pre>
+<p>重置更新源</p>
+<pre><code class="language-bash"># 重置brew.git:
+cd &quot;$(brew --repo)&quot;
+git remote set-url origin https://github.com/Homebrew/brew.git
+
+# 重置homebrew-core.git:
+cd &quot;$(brew --repo)/Library/Taps/homebrew/homebrew-core&quot;
+git remote set-url origin https://github.com/Homebrew/homebrew-core.git
+</code></pre>
+<p>原文来自：https://www.cnblogs.com/meilong/p/10388730.html</p>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[一次数独生成及求解方案的剖析（Java实现）]]></title>
         <id>https://jobsleecn.github.io/post/yi-ci-shu-du-sheng-cheng-ji-qiu-jie-fang-an-de-pou-xi-java-shi-xian/</id>
